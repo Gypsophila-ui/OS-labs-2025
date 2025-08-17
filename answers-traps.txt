@@ -1,0 +1,42 @@
+ Q. 01
+
+> Which registers contain arguments to functions? For example, which register holds 13 in main's call to `printf`?
+
+`a1`, `a2`, `a3` 等通用寄存器将保存函数的参数。
+
+
+
+例如，查看call.asm文件中的main函数可知，在 main 调用 printf 时，由寄存器 `a2` 保存 13。
+
+### Q. 02
+
+> Where is the call to function `f` in the assembly code for main? Where is the call to `g`? (Hint: the compiler may inline functions.)
+
+查看`call.asm`文件中的`f`和`g`函数可知，函数 `f` 调用函数 `g` ；函数 `g` 使传入的参数加 3 后返回。
+
+
+此外，编译器会进行内联优化，即一些编译时可以计算的数据会在编译时得出结果，而不是进行函数调用。查看 `main` 函数可以发现，`printf` 中包含了一个对 `f` 的调用。但是对应的会汇编代码却是直接将 `f(8)+1` 替换为 `12` 。
+
+
+
+这就说明编译器对这个函数调用进行了优化，所以对于 `main` 函数的汇编代码来说，其并没有调用函数 `f` 和 `g` ，而是在运行之前由编译器对其进行了计算。
+
+### Q. 03
+
+> At what address is the function `printf` located?
+
+
+
+查阅得到其地址在 `0x630`。
+
+### Q. 04
+
+> What value is in the register `ra` just after the `jalr` to `printf` in `main`?
+
+
+
+30：使用 `auipc ra,0x0` 将当前程序计数器 `pc` 的值存入 `ra` 中。
+
+34：`jalr 1536(ra)` 跳转到偏移地址 `printf` 处，也就是 `0x630` 的位置。
+
+根据 [reference1](https://xiayingp.gitbook.io/build_a_os/hardware-device-assembly/risc-v-assembly) 中的信息，在执行完这句命令之后， 寄存器 `ra` 的值设置为 `pc + 4` ，也就是 `return address` 返回地址 `0x38`。即`jalr` 指令执行完毕之后，`ra` 的值为 `0x38`.
