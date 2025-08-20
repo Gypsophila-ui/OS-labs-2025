@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define NBUCKET 5
+#define NBUCKET 97
 #define NKEYS 100000
 
 struct entry {
@@ -17,13 +17,15 @@ struct entry *table[NBUCKET];
 int keys[NKEYS];
 int nthread = 1;
 
+// 每个 bucket 一个锁
+pthread_mutex_t lock[NBUCKET];
 
 double
 now()
 {
- struct timeval tv;
- gettimeofday(&tv, 0);
- return tv.tv_sec + tv.tv_usec / 1000000.0;
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
 static void 
@@ -36,38 +38,42 @@ insert(int key, int value, struct entry **p, struct entry *n)
   *p = e;
 }
 
-static 
-void put(int key, int value)
+static void 
+put(int key, int value)
 {
   int i = key % NBUCKET;
+  pthread_mutex_lock(&lock[i]);   // 加锁保护当前 bucket
 
-  // is the key already present?
   struct entry *e = 0;
   for (e = table[i]; e != 0; e = e->next) {
     if (e->key == key)
       break;
   }
-  if(e){
-    // update the existing key.
+
+  if (e) {
+    // update existing key
     e->value = value;
   } else {
-    // the new is new.
+    // insert new key
     insert(key, value, &table[i], table[i]);
   }
 
+  pthread_mutex_unlock(&lock[i]); // 解锁
 }
 
 static struct entry*
 get(int key)
 {
   int i = key % NBUCKET;
-
+  pthread_mutex_lock(&lock[i]);   // 加锁保护遍历
 
   struct entry *e = 0;
   for (e = table[i]; e != 0; e = e->next) {
-    if (e->key == key) break;
+    if (e->key == key)
+      break;
   }
 
+  pthread_mutex_unlock(&lock[i]); // 解锁
   return e;
 }
 
@@ -80,7 +86,6 @@ put_thread(void *xa)
   for (int i = 0; i < b; i++) {
     put(keys[b*n + i], n);
   }
-
   return NULL;
 }
 
@@ -105,7 +110,6 @@ main(int argc, char *argv[])
   void *value;
   double t1, t0;
 
-
   if (argc < 2) {
     fprintf(stderr, "Usage: %s nthreads\n", argv[0]);
     exit(-1);
@@ -114,8 +118,14 @@ main(int argc, char *argv[])
   tha = malloc(sizeof(pthread_t) * nthread);
   srandom(0);
   assert(NKEYS % nthread == 0);
+
   for (int i = 0; i < NKEYS; i++) {
     keys[i] = random();
+  }
+
+  // 初始化每个 bucket 的锁
+  for (int i = 0; i < NBUCKET; i++) {
+    pthread_mutex_init(&lock[i], NULL);
   }
 
   //
@@ -147,4 +157,11 @@ main(int argc, char *argv[])
 
   printf("%d gets, %.3f seconds, %.0f gets/second\n",
          NKEYS*nthread, t1 - t0, (NKEYS*nthread) / (t1 - t0));
+
+  // 销毁锁
+  for (int i = 0; i < NBUCKET; i++) {
+    pthread_mutex_destroy(&lock[i]);
+  }
+
+  return 0;
 }
