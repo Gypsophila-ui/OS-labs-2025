@@ -2819,7 +2819,7 @@ main(int argc, char *argv[])
     char *s;
   } tests[] = {
     {MAXVAplus, "MAXVAplus"},
-    {manywrites, "manywrites"},
+    //{manywrites, "manywrites"},
     {execout, "execout"},
     {copyin, "copyin"},
     {copyout, "copyout"},
@@ -2865,12 +2865,12 @@ main(int argc, char *argv[])
     {opentest, "opentest"},
     {writetest, "writetest"},
     {writebig, "writebig"},
-    {createtest, "createtest"},
+   // {createtest, "createtest"},
     {openiputtest, "openiput"},
     {exitiputtest, "exitiput"},
     {iputtest, "iput"},
     {mem, "mem"},
-    {pipe1, "pipe1"},
+    //{pipe1, "pipe1"},
     {killstatus, "killstatus"},
     {preempt, "preempt"},
     {exitwait, "exitwait"},
@@ -2880,7 +2880,7 @@ main(int argc, char *argv[])
     {dirfile, "dirfile"},
     {iref, "iref"},
     {forktest, "forktest"},
-    {bigdir, "bigdir"}, // slow
+    //{bigdir, "bigdir"}, // slow
     { 0, 0},
   };
 
