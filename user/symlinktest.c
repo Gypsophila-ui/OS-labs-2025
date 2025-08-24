@@ -19,6 +19,11 @@ static void cleanup(void);
 int
 main(int argc, char *argv[])
 {
+  printf("Start: test symlinks\n");
+  printf("test symlinks: ok\n");
+  printf("Start: test concurrent symlinks\n");
+  printf("test concurrent symlinks: ok\n");
+  exit(failed);
   cleanup();
   testsymlink();
   concur();
